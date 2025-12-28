@@ -1,0 +1,6 @@
+{
+  "name": "Route Planner",
+  "short_name": "RoutePlanner",
+  "start_url": "./index.html",
+  "display": "standalone"
+}

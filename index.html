@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <meta name="theme-color" content="#1e88e5" />
+
+    <title>Route Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="logo.png" />
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        overflow-y: auto;
+      }
+
+      /* TOP BAR */
+      #top {
+        padding: 10px 12px;
+        border-bottom: 1px solid #ccc;
+      }
+
+      #searchBar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+
+      #search {
+        width: 380px;
+        padding: 8px;
+      }
+
+      #logo {
+        width: 400px;
+        height: auto;
+        display: block;
+      }
+
+      #buttons button {
+        margin: 3px;
+      }
+
+      /* LAYOUT */
+      #container {
+        display: grid;
+        grid-template-columns: 340px 1fr 360px;
+        min-height: calc(100vh - 105px);
+      }
+
+      #left,
+      #right {
+        padding: 8px;
+        overflow-y: auto;
+      }
+
+      #left {
+        border-right: 1px solid #ddd;
+      }
+
+      #right {
+        border-left: 1px solid #ddd;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        background: #f4f4f5;
+        border-radius: 10px;
+        font-size: 15px;
+      }
+      .item:hover {
+        background: #e5e7eb;
+      }
+
+      .item span {
+        flex: 1;
+      }
+
+      .ctrl {
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+
+      .step {
+        border-bottom: 1px solid #eee;
+        padding: 6px 0;
+      }
+
+      /* MODALE */
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      .modal-content {
+        background: #fff;
+        width: 320px;
+        max-height: 80%;
+        margin: 10% auto;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-header button {
+        border: none;
+        background: none;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      .route-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-align: left;
+        flex: 1;
+      }
+      #logoBox {
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      const ACCESS_KEY = "route_planner_auth";
+      const PASSWORD = "3021152112"; // ← la tua
+
+      if (localStorage.getItem(ACCESS_KEY) !== "ok") {
+        const pwd = prompt("Inserisci password");
+
+        if (pwd === null || pwd !== PASSWORD) {
+          document.body.innerHTML = "";
+          document.body.style.background = "#fff";
+          alert("Accesso negato");
+          throw new Error("Accesso bloccato");
+        }
+
+        localStorage.setItem(ACCESS_KEY, "ok");
+      }
+    </script>
+
+    <!-- TOP -->
+    <div id="top">
+      <div id="logoBox">
+        <img src="logo.png" id="logo" />
+      </div>
+
+      <div id="searchBar">
+        <input id="search" placeholder="Cerca indirizzo..." />
+      </div>
+
+      <div id="buttons">
+        <button id="add">➕ Aggiungi</button>
+        <button id="clear">🗑 Svuota lista</button>
+        <button id="plan">🧭 Pianifica</button>
+        <button id="gps">📍 GPS</button>
+        <button id="routes">📁 Percorsi</button>
+        <button id="save">💾 Salva</button>
+        <button id="share">📎 Condividi</button>
+        <button id="pdf">PDF</button>
+      </div>
+    </div>
+
+    <!-- CONTENUTO -->
+    <div id="container">
+      <div id="left">
+        <b>Indirizzi</b>
+        <div id="list"></div>
+      </div>
+
+      <div id="map"></div>
+
+      <div id="right">
+        <b>Tappe</b>
+        <div id="steps"></div>
+      </div>
+    </div>
+
+    <!-- MODALE -->
+    <div id="routesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <b>Percorsi salvati</b>
+          <button onclick="routesModal.style.display='none'">✖</button>
+        </div>
+        <div id="saved"></div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+      const { jsPDF } = window.jspdf;
+
+      let map, autocomplete, directionsService;
+      let addresses = [];
+      let renderers = [];
+      let markers = [];
+      let gpsMarker = null;
+      let gpsPos = null;
+      let plannedOrder = [];
+      let stepsData = [];
+
+      const params = new URLSearchParams(location.search);
+      if (params.has("route")) {
+        addresses = JSON.parse(params.get("route"));
+        renderList();
+      }
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 41.9, lng: 12.5 },
+          zoom: 7,
+          gestureHandling: "greedy",
+        });
+
+        autocomplete = new google.maps.places.Autocomplete(
+          document.getElementById("search")
+        );
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (!place || !place.formatted_address) return;
+
+          addresses.push(place.formatted_address);
+          renderList();
+          document.getElementById("search").value = "";
+        });
+
+        directionsService = new google.maps.DirectionsService();
+        renderSaved();
+      }
+
+      function renderList() {
+        list.innerHTML = "";
+        addresses.forEach((a, i) => {
+          const d = document.createElement("div");
+          d.className = "item";
+          d.innerHTML = `<span>${i + 1}. ${a}</span>
+
+            <button class="ctrl" onclick="del(${i})">🗑️</button>`;
+          list.appendChild(d);
+        });
+      }
+
+      function del(i) {
+        addresses.splice(i, 1);
+        renderList();
+      }
+
+      add.onclick = () => {
+        if (!search.value.trim()) return;
+        addresses.push(search.value.trim());
+        renderList();
+        search.value = "";
+      };
+
+      gps.onclick = () => {
+        navigator.geolocation.getCurrentPosition((p) => {
+          gpsPos = { lat: p.coords.latitude, lng: p.coords.longitude };
+          if (gpsMarker) gpsMarker.setMap(null);
+          gpsMarker = new google.maps.Marker({
+            map,
+            position: gpsPos,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#4285F4",
+              fillOpacity: 1,
+              strokeColor: "#fff",
+              strokeWeight: 2,
+            },
+          });
+          map.setCenter(gpsPos);
+          map.setZoom(13);
+        });
+      };
+
+      plan.onclick = async () => {
+        if (!gpsPos || addresses.length < 2) return;
+
+        // pulizia
+        renderers.forEach((r) => r.setMap(null));
+        markers.forEach((m) => m.setMap(null));
+        renderers = [];
+        markers = [];
+        steps.innerHTML = "";
+        plannedOrder = [];
+        stepsData = [];
+        addresses = [...addresses];
+
+        const MAX = 25;
+        const chunks = [];
+
+        // spezza indirizzi in blocchi da 25
+        for (let i = 0; i < addresses.length; i += MAX) {
+          chunks.push(addresses.slice(i, i + MAX));
+        }
+
+        let origin = gpsPos;
+
+        for (let c = 0; c < chunks.length; c++) {
+          const chunk = chunks[c];
+          const destination = chunk[chunk.length - 1];
+          const waypoints = chunk
+            .slice(0, -1)
+            .map((a) => ({ location: a, stopover: true }));
+
+          await new Promise((resolve) => {
+            directionsService.route(
+              {
+                origin,
+                destination,
+                waypoints,
+                optimizeWaypoints: true,
+                travelMode: "DRIVING",
+              },
+              (res, st) => {
+                if (st !== "OK") {
+                  console.error("Errore Directions:", st);
+                  resolve();
+                  return;
+                }
+
+                const route = res.routes[0];
+
+                const r = new google.maps.DirectionsRenderer({
+                  map,
+                  suppressMarkers: true,
+                });
+                r.setDirections(res);
+                renderers.push(r);
+
+                route.legs.forEach((l, i) => {
+                  markers.push(
+                    new google.maps.Marker({
+                      map,
+                      position: l.end_location,
+                      label: String(plannedOrder.length + 1),
+                    })
+                  );
+
+                  plannedOrder.push(l.end_address);
+
+                  stepsData.push({
+                    address: l.end_address,
+                    distance: l.distance.text,
+                    duration: l.duration.text,
+                  });
+                });
+
+                origin = destination;
+                resolve();
+              }
+            );
+          });
+        }
+
+        renderSteps();
+      };
+
+      routes.onclick = () => (routesModal.style.display = "block");
+
+      save.onclick = () => {
+        const n = prompt("Nome percorso");
+        if (!n) return;
+        // salva l’ordine attuale delle tappe
+        const orderedAddresses = stepsData.map((s) => s.address);
+        localStorage.setItem("route_" + n, JSON.stringify(orderedAddresses));
+        renderSaved();
+      };
+      clear.onclick = () => {
+        if (!addresses.length) return;
+        if (!confirm("Svuotare tutta la lista?")) return;
+
+        addresses = [];
+        localStorage.removeItem("route_autosave");
+
+        renderList();
+
+        renderers.forEach((r) => r.setMap(null));
+        markers.forEach((m) => m.setMap(null));
+        renderers = [];
+        markers = [];
+        steps.innerHTML = "";
+      };
+
+      function renderSaved() {
+        saved.innerHTML = "";
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("route_") && k !== "route_autosave")
+          .forEach((k) => {
+            const name = k.replace("route_", "");
+            const row = document.createElement("div");
+            row.className = "item";
+
+            const btn = document.createElement("button");
+            btn.className = "route-btn";
+            btn.textContent = name;
+            btn.onclick = () => {
+              addresses = JSON.parse(localStorage.getItem(k));
+              renderList();
+              routesModal.style.display = "none";
+            };
+
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "🗑️";
+            delBtn.onclick = () => {
+              if (confirm("Eliminare percorso?")) {
+                localStorage.removeItem(k);
+                renderSaved();
+              }
+            };
+
+            row.appendChild(btn);
+            row.appendChild(delBtn);
+            saved.appendChild(row);
+          });
+      }
+      const share = document.getElementById("share");
+      console.log("SHARE JS CARICATO");
+
+      share.onclick = () => {
+        const text = buildShareText();
+        if (!text) {
+          alert("Niente da condividere");
+          return;
+        }
+        shareMenu.dataset.text = text;
+        shareMenu.style.display = "block";
+      };
+
+      pdf.onclick = async () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("portrait", "mm", "a4");
+
+        const today = new Date().toLocaleDateString("it-IT");
+
+        // ===== LOGO =====
+        const logo = new Image();
+        logo.src = "logo.png";
+
+        logo.onload = async () => {
+          // ===== PAGINA 1 =====
+          doc.addImage(logo, "PNG", 10, 8, 35, 18);
+          doc.setFontSize(14);
+          doc.text("PERCORSO", 55, 18);
+
+          doc.setFontSize(10);
+          doc.text(`Data: ${today}`, 150, 14);
+          doc.text("Autista: ____________________", 150, 20);
+          doc.text("Mezzo: ____________________", 150, 26);
+
+          doc.setFontSize(11);
+          let y = 40;
+
+          stepsData.forEach((s, i) => {
+            if (y > 280) {
+              doc.addPage();
+              y = 20;
+            }
+
+            doc.text(
+              `${i + 1}. ${s.address} (${s.distance} – ${s.duration})`,
+              10,
+              y
+            );
+
+            y += 6;
+          });
+
+          // ===== FOOTER NUMERI PAGINA =====
+          const pageCount = doc.getNumberOfPages();
+          for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(9);
+            doc.text(`Pagina ${i} / ${pageCount}`, 148, 200, {
+              align: "center",
+            });
+          }
+
+          doc.save("percorso-completo.pdf");
+        };
+      };
+
+      function moveUp(i) {
+        if (i === 0) return;
+
+        // scambia le tappe
+        const tmp = plannedOrder[i - 1];
+        plannedOrder[i - 1] = plannedOrder[i];
+        plannedOrder[i] = tmp;
+
+        // ridisegna la lista a destra
+        steps.innerHTML = "";
+        plannedOrder.forEach((a, idx) => {
+          const d = document.createElement("div");
+          d.className = "step";
+          d.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+            "<div>" +
+            (idx + 1) +
+            ". " +
+            a +
+            "</div>" +
+            "<div>" +
+            (idx > 0
+              ? "<span style='cursor:pointer' onclick='moveUp(" +
+                idx +
+                ")'>⬆️</span>"
+              : "") +
+            "</div>" +
+            "</div>";
+          steps.appendChild(d);
+        });
+      }
+      function renderSteps() {
+        steps.innerHTML = "";
+        stepsData.forEach((s, i) => {
+          const d = document.createElement("div");
+          d.className = "step";
+          d.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+            "<div>" +
+            (i + 1) +
+            ". " +
+            s.address +
+            "<br>" +
+            "<small>" +
+            s.distance +
+            " – " +
+            s.duration +
+            "</small>" +
+            "</div>" +
+            "<div>" +
+            (i > 0
+              ? "<span style='cursor:pointer' onclick='moveUp(" +
+                i +
+                ")'>⬆️</span><br>"
+              : "") +
+            (i < stepsData.length - 1
+              ? "<span style='cursor:pointer' onclick='moveDown(" +
+                i +
+                ")'>⬇️</span>"
+              : "") +
+            "</div>" +
+            "</div>";
+          steps.appendChild(d);
+        });
+      }
+
+      function moveUp(i) {
+        if (i === 0) return;
+        [stepsData[i - 1], stepsData[i]] = [stepsData[i], stepsData[i - 1]];
+        renderSteps();
+        recalcRouteFromSteps();
+      }
+
+      function moveDown(i) {
+        if (i === stepsData.length - 1) return;
+        [stepsData[i + 1], stepsData[i]] = [stepsData[i], stepsData[i + 1]];
+        renderSteps();
+        recalcRouteFromSteps();
+      }
+      function recalcRouteFromSteps() {
+        if (!gpsPos || stepsData.length === 0) return;
+
+        // pulisci mappa
+        renderers.forEach((r) => r.setMap(null));
+        markers.forEach((m) => m.setMap(null));
+        renderers = [];
+        markers = [];
+
+        const waypoints = stepsData.slice(0, -1).map((s) => ({
+          location: s.address,
+          stopover: true,
+        }));
+
+        directionsService.route(
+          {
+            origin: gpsPos,
+            destination: stepsData[stepsData.length - 1].address,
+            waypoints,
+            optimizeWaypoints: false, // IMPORTANTISSIMO: rispetta l’ordine
+            travelMode: "DRIVING",
+          },
+          (res, st) => {
+            if (st !== "OK") return;
+
+            const r = new google.maps.DirectionsRenderer({
+              map,
+              suppressMarkers: true,
+            });
+            r.setDirections(res);
+            renderers.push(r);
+
+            // rimetti marker numerati
+            res.routes[0].legs.forEach((l, i) => {
+              markers.push(
+                new google.maps.Marker({
+                  map,
+                  position: l.end_location,
+                  label: {
+                    text: String(i + 1),
+                    color: "#000000",
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                  },
+                })
+              );
+            });
+          }
+        );
+      }
+      function fitMapToRoute() {
+        if (!markers.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach((m) => bounds.extend(m.getPosition()));
+        map.fitBounds(bounds);
+      }
+      function buildShareText() {
+        if (!stepsData.length) return "";
+
+        let text = "PERCORSO OTTIMIZZATO\n\n";
+
+        stepsData.forEach((s, i) => {
+          text += `${i + 1}. ${s.address} (${s.distance} – ${s.duration})\n`;
+        });
+
+        return text;
+      }
+    </script>
+    <script>
+      function openShare() {
+        const text = buildShareText();
+        if (!text) {
+          alert("Niente da condividere");
+          return;
+        }
+
+        window.open(
+          "https://wa.me/?text=" + encodeURIComponent(text),
+          "_blank"
+        );
+      }
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const share = document.getElementById("share");
+        if (!share) {
+          alert("Bottone Condividi NON trovato");
+          return;
+        }
+
+        share.onclick = () => {
+          const text = buildShareText();
+          if (!text) {
+            alert("Testo vuoto, niente da condividere");
+            return;
+          }
+
+          window.open(
+            "https://wa.me/?text=" + encodeURIComponent(text),
+            "_blank"
+          );
+        };
+      });
+    </script>
+
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFCaVFjvR-RVjdtIWU2wn96E-v8UuGzMc&libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto; /* ← QUI */
+}
+
+/* contenitore generale */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ================= TOP ================= */
+#top {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  justify-content: center;
+}
+
+/* LOGO */
+#logoBox {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#logo {
+  width: 300px;
+  height: auto;
+  display: block;
+}
+
+/* SEARCH */
+#searchBar {
+  width: 300px; /* stessa larghezza del logo */
+}
+
+#search {
+  width: 100%;
+  padding: 8px;
+}
+
+/* ================= LAYOUT ================= */
+#layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+
+/* pannello sinistro */
+#left {
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  overflow-y: auto;
+  border-right: 1px solid #ccc;
+}
+
+/* mappa */
+#map {
+  flex: 1;
+  min-width: 0;
+}
+
+/* pannello destro */
+#right {
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
+  overflow-y: auto;
+  border-left: 1px solid #ccc;
+}
+.frecce button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+}
+
+.frecce button:hover {
+  transform: scale(1.2);
+}
