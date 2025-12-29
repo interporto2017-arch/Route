@@ -41,6 +41,7 @@ window.addEventListener("load", () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/Route/sw.js");
 }
+
 const btnVoice = document.getElementById("btn-voice");
 const input = document.getElementById("search");
 
