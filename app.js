@@ -58,8 +58,14 @@ btnVoice.addEventListener("click", () => {
   recognition.lang = "it-IT";
   recognition.interimResults = false;
 
+  let spokenText = "";
+
   recognition.onresult = (event) => {
-    input.value = event.results[0][0].transcript;
+    spokenText = event.results[0][0].transcript;
+  };
+
+  recognition.onend = () => {
+    input.value = spokenText;
   };
 
   recognition.start();
