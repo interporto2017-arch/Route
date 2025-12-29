@@ -46,12 +46,15 @@ const btnVoice = document.getElementById("btn-voice");
 const input = document.getElementById("search");
 
 btnVoice.addEventListener("click", () => {
-  if (!("webkitSpeechRecognition" in window)) {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
     alert("Microfono non supportato");
     return;
   }
 
-  const recognition = new webkitSpeechRecognition();
+  const recognition = new SpeechRecognition();
   recognition.lang = "it-IT";
   recognition.interimResults = false;
 
