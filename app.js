@@ -39,5 +39,5 @@ window.addEventListener("load", () => {
   setTimeout(() => clearInterval(timer), 10000);
 });
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js");
+  navigator.serviceWorker.register("/Route/sw.js");
 }
