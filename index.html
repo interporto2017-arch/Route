@@ -153,24 +153,6 @@
   </head>
 
   <body>
-    <script>
-      const ACCESS_KEY = "route_planner_auth";
-      const PASSWORD = "3021152112"; // ← la tua
-
-      if (localStorage.getItem(ACCESS_KEY) !== "ok") {
-        const pwd = prompt("Inserisci password");
-
-        if (pwd === null || pwd !== PASSWORD) {
-          document.body.innerHTML = "";
-          document.body.style.background = "#fff";
-          alert("Accesso negato");
-          throw new Error("Accesso bloccato");
-        }
-
-        localStorage.setItem(ACCESS_KEY, "ok");
-      }
-    </script>
-
     <!-- TOP -->
     <div id="top">
       <div id="logoBox">
