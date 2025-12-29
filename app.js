@@ -38,9 +38,9 @@ window.addEventListener("load", () => {
   // stop dopo 10 secondi
   setTimeout(() => clearInterval(timer), 10000);
 });
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/Route/sw.js");
-}
+//if ("serviceWorker" in navigator) {
+//navigator.serviceWorker.register("/Route/sw.js");
+//}
 
 const btnVoice = document.getElementById("btn-voice");
 const input = document.getElementById("search");
