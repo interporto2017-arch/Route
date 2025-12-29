@@ -41,3 +41,22 @@ window.addEventListener("load", () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/Route/sw.js");
 }
+const btnVoice = document.getElementById("btn-voice");
+const input = document.getElementById("search");
+
+btnVoice.addEventListener("click", () => {
+  if (!("webkitSpeechRecognition" in window)) {
+    alert("Microfono non supportato");
+    return;
+  }
+
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = "it-IT";
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+  };
+
+  recognition.start();
+});
