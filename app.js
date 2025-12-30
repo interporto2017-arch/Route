@@ -5,13 +5,11 @@ console.log("Route Planner avviato");
   Funziona sia con <li> che con <div>
 */
 function aggiungiFrecceAlleTappe() {
-  // prende sia li che div dentro il pannello destro
   const tappe = document.querySelectorAll(
     "#right li, #right .tappa, #right div"
   );
 
   tappe.forEach((tappa) => {
-    // evita di aggiungere le frecce due volte
     if (tappa.querySelector(".frecce")) return;
 
     const frecce = document.createElement("span");
@@ -30,25 +28,24 @@ function aggiungiFrecceAlleTappe() {
 
 // aspetta che la pagina sia caricata
 window.addEventListener("load", () => {
-  // ritenta più volte perché le tappe arrivano dopo
   const timer = setInterval(() => {
     aggiungiFrecceAlleTappe();
   }, 500);
 
-  // stop dopo 10 secondi
   setTimeout(() => clearInterval(timer), 10000);
 });
-//if ("serviceWorker" in navigator) {
-//navigator.serviceWorker.register("/Route/sw.js");
-//}
-function aggiungiIndirizzo(testo) {
-  console.log("🎤 Riconosciuto:", testo);
 
-  const lista = document.getElementById("addresses"); // ⚠️ vedi nota sotto
-  if (!lista) {
-    console.error("❌ Lista indirizzi non trovata");
-    return;
-  }
+// service worker DISATTIVATO (ok così per ora)
+// if ("serviceWorker" in navigator) {
+//   navigator.serviceWorker.register("/Route/sw.js");
+// }
+
+// ==========================
+// AGGIUNTA INDIRIZZO
+// ==========================
+function aggiungiIndirizzo(testo) {
+  const lista = document.getElementById("addresses");
+  if (!lista) return;
 
   const div = document.createElement("div");
   div.className = "item";
@@ -57,25 +54,33 @@ function aggiungiIndirizzo(testo) {
   lista.appendChild(div);
 }
 
+// ==========================
+// MICROFONO (FIX DEFINITIVO)
+// ==========================
 const btnVoice = document.getElementById("btn-voice");
+let recognition = null;
 
 btnVoice.addEventListener("click", () => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert("SpeechRecognition non supportato");
+    alert("Microfono non supportato");
     return;
   }
 
-  const recognition = new SR();
+  // chiude eventuale sessione precedente
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+  }
+
+  recognition = new SR();
   recognition.lang = "it-IT";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
     aggiungiIndirizzo(text);
-  };
-
-  recognition.onerror = (e) => {
-    console.error("Speech error", e);
   };
 
   recognition.start();
