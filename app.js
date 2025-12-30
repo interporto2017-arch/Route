@@ -56,7 +56,7 @@ btnVoice.addEventListener("click", () => {
 
   const recognition = new SpeechRecognition();
   recognition.lang = "it-IT";
-  recognition.interimResults = false;
+  recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
   recognition.onresult = (event) => {
