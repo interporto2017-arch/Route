@@ -57,17 +57,15 @@ btnVoice.addEventListener("click", () => {
   const recognition = new SpeechRecognition();
   recognition.lang = "it-IT";
   recognition.interimResults = false;
-
-  let spokenText = "";
+  recognition.maxAlternatives = 1;
 
   recognition.onresult = (event) => {
-    spokenText = event.results[0][0].transcript;
+    const spokenText = event.results[0][0].transcript;
+    aggiungiIndirizzo(spokenText); // va diretto in lista
   };
 
-  recognition.onend = () => {
-    if (spokenText.trim() !== "") {
-      aggiungiIndirizzo(spokenText);
-    }
+  recognition.onerror = (e) => {
+    console.error("Speech error:", e);
   };
 
   recognition.start();
