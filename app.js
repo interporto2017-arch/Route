@@ -41,6 +41,21 @@ window.addEventListener("load", () => {
 //if ("serviceWorker" in navigator) {
 //navigator.serviceWorker.register("/Route/sw.js");
 //}
+function aggiungiIndirizzo(testo) {
+  console.log("🎤 Riconosciuto:", testo);
+
+  const lista = document.getElementById("addresses"); // ⚠️ vedi nota sotto
+  if (!lista) {
+    console.error("❌ Lista indirizzi non trovata");
+    return;
+  }
+
+  const div = document.createElement("div");
+  div.className = "item";
+  div.textContent = testo;
+
+  lista.appendChild(div);
+}
 
 const btnVoice = document.getElementById("btn-voice");
 
