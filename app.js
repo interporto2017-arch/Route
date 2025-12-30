@@ -60,10 +60,16 @@ btnVoice.addEventListener("click", () => {
   recognition.maxAlternatives = 1;
 
   recognition.onresult = (event) => {
-    const spokenText = event.results[event.results.length - 1][0].transcript;
-
+    const spokenText = event.results[0][0].transcript;
     aggiungiIndirizzo(spokenText);
-    recognition.stop();
+  };
+
+  recognition.onstart = () => {
+    console.log("🎤 ascolto partito");
+  };
+
+  recognition.onend = () => {
+    console.log("🔴 ascolto finito");
   };
 
   recognition.onerror = (e) => {
