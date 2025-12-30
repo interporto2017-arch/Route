@@ -43,37 +43,24 @@ window.addEventListener("load", () => {
 //}
 
 const btnVoice = document.getElementById("btn-voice");
-const input = document.getElementById("search");
 
 btnVoice.addEventListener("click", () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    alert("Microfono non supportato");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert("SpeechRecognition non supportato");
     return;
   }
 
-  const recognition = new SpeechRecognition();
+  const recognition = new SR();
   recognition.lang = "it-IT";
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
 
-  recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
-    aggiungiIndirizzo(spokenText);
-  };
-
-  recognition.onstart = () => {
-    console.log("🎤 ascolto partito");
-  };
-
-  recognition.onend = () => {
-    console.log("🔴 ascolto finito");
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    aggiungiIndirizzo(text);
   };
 
   recognition.onerror = (e) => {
-    console.error("Speech error:", e);
+    console.error("Speech error", e);
   };
 
   recognition.start();
