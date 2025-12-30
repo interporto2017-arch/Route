@@ -65,7 +65,9 @@ btnVoice.addEventListener("click", () => {
   };
 
   recognition.onend = () => {
-    input.value = spokenText;
+    if (spokenText.trim() !== "") {
+      aggiungiIndirizzo(spokenText);
+    }
   };
 
   recognition.start();
