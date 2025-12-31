@@ -1,16 +1,15 @@
 console.log("Route Planner avviato");
+
 let pianificazioneAttiva = false;
 
 /*
-  Aggiunge frecce su/giù a ogni tappa
-  Funziona sia con <li> che con <div>
+  Aggiunge frecce su/giù SOLO alle tappe (a destra)
+  VIENE CHIAMATA SOLO DOPO LA PIANIFICAZIONE
 */
 function aggiungiFrecceAlleTappe() {
   if (!pianificazioneAttiva) return;
 
-  const tappe = document.querySelectorAll(
-    "#right li, #right .tappa, #right div"
-  );
+  const tappe = document.querySelectorAll("#right li, #right .tappa");
 
   tappe.forEach((tappa) => {
     if (tappa.querySelector(".frecce")) return;
@@ -29,22 +28,8 @@ function aggiungiFrecceAlleTappe() {
   });
 }
 
-// aspetta che la pagina sia caricata
-window.addEventListener("load", () => {
-  const timer = setInterval(() => {
-    aggiungiFrecceAlleTappe();
-  }, 500);
-
-  setTimeout(() => clearInterval(timer), 10000);
-});
-
-// service worker DISATTIVATO (ok così per ora)
-// if ("serviceWorker" in navigator) {
-//   navigator.serviceWorker.register("/Route/sw.js");
-// }
-
 // ==========================
-// AGGIUNTA INDIRIZZO
+// AGGIUNTA INDIRIZZO (SINISTRA)
 // ==========================
 function aggiungiIndirizzo(testo) {
   const lista = document.getElementById("addresses");
@@ -74,7 +59,7 @@ function rinumera() {
 }
 
 // ==========================
-// MICROFONO (FIX DEFINITIVO)
+// MICROFONO
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
 let recognition = null;
@@ -86,7 +71,6 @@ btnVoice.addEventListener("click", () => {
     return;
   }
 
-  // chiude eventuale sessione precedente
   if (recognition) {
     recognition.stop();
     recognition = null;
