@@ -47,11 +47,28 @@ function aggiungiIndirizzo(testo) {
   const lista = document.getElementById("addresses");
   if (!lista) return;
 
+  const index = lista.children.length + 1;
+
   const div = document.createElement("div");
   div.className = "item";
-  div.textContent = testo;
+
+  div.innerHTML = `
+    <span class="num">${index}.</span>
+    <span class="text">${testo}</span>
+    <button class="del">🗑️</button>
+  `;
+
+  div.querySelector(".del").addEventListener("click", () => {
+    div.remove();
+    rinumera();
+  });
 
   lista.appendChild(div);
+}
+function rinumera() {
+  document.querySelectorAll("#addresses .num").forEach((el, i) => {
+    el.textContent = i + 1 + ".";
+  });
 }
 
 // ==========================
