@@ -91,9 +91,5 @@ const btnPlan = document.getElementById("plan");
 
 btnPlan.addEventListener("click", () => {
   console.log("🧭 Pianifica cliccato");
-
   pianificazioneAttiva = true;
-
-  // TEMPORANEO: serve solo a test
-  aggiungiFrecceAlleTappe();
 });
