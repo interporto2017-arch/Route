@@ -1,5 +1,5 @@
 console.log("Route Planner avviato");
-
+let listaIndirizzi = [];
 let pianificazioneAttiva = false;
 
 /*
@@ -35,6 +35,9 @@ function aggiungiIndirizzo(testo) {
   const lista = document.getElementById("addresses");
   if (!lista) return;
 
+  // 🔴 QUESTA È LA RIGA CHE MANCAVA
+  listaIndirizzi.push(testo);
+
   const div = document.createElement("div");
   div.className = "item";
   div.innerHTML = `
@@ -44,18 +47,14 @@ function aggiungiIndirizzo(testo) {
   `;
 
   div.querySelector(".del").addEventListener("click", () => {
+    const index = [...lista.children].indexOf(div);
+    if (index > -1) listaIndirizzi.splice(index, 1);
     div.remove();
     rinumera();
   });
 
   lista.appendChild(div);
   rinumera();
-}
-
-function rinumera() {
-  document.querySelectorAll("#addresses .num").forEach((el, i) => {
-    el.textContent = i + 1 + ".";
-  });
 }
 
 // ==========================
