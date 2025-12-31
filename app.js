@@ -1,4 +1,5 @@
 console.log("Route Planner avviato");
+let pianificazioneAttiva = false;
 
 /*
   Aggiunge frecce su/giù a ogni tappa
