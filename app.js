@@ -6,6 +6,8 @@ let pianificazioneAttiva = false;
   Funziona sia con <li> che con <div>
 */
 function aggiungiFrecceAlleTappe() {
+  if (!pianificazioneAttiva) return;
+
   const tappe = document.querySelectorAll(
     "#right li, #right .tappa, #right div"
   );
