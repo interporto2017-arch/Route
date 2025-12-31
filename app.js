@@ -61,6 +61,7 @@ const btnVoice = document.getElementById("btn-voice");
 let recognition = null;
 
 btnVoice.addEventListener("click", () => {
+  console.log("👉 CLICK MIC");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     alert("Microfono non supportato");
