@@ -47,13 +47,10 @@ function aggiungiIndirizzo(testo) {
   const lista = document.getElementById("addresses");
   if (!lista) return;
 
-  const index = lista.children.length + 1;
-
   const div = document.createElement("div");
   div.className = "item";
-
   div.innerHTML = `
-    <span class="num">${index}.</span>
+    <span class="num"></span>
     <span class="text">${testo}</span>
     <button class="del">🗑️</button>
   `;
@@ -64,7 +61,9 @@ function aggiungiIndirizzo(testo) {
   });
 
   lista.appendChild(div);
+  rinumera();
 }
+
 function rinumera() {
   document.querySelectorAll("#addresses .num").forEach((el, i) => {
     el.textContent = i + 1 + ".";
