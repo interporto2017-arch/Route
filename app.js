@@ -28,16 +28,11 @@ function aggiungiFrecceAlleTappe() {
   });
 }
 
-// ==========================
 // AGGIUNTA INDIRIZZO (SINISTRA)
 // ==========================
 function aggiungiIndirizzo(testo) {
   const container = document.getElementById("list");
-
   if (!container) return;
-
-  // 🔴 QUESTA È LA RIGA CHE MANCAVA
-  listaIndirizzi.push(testo);
 
   const div = document.createElement("div");
   div.className = "item";
@@ -48,14 +43,10 @@ function aggiungiIndirizzo(testo) {
   `;
 
   div.querySelector(".del").addEventListener("click", () => {
-    const index = [...lista.children].indexOf(div);
-    if (index > -1) listaIndirizzi.splice(index, 1);
     div.remove();
-    rinumera();
   });
 
-  lista.appendChild(div);
-  rinumera();
+  container.appendChild(div);
 }
 
 // ==========================
