@@ -32,8 +32,9 @@ function aggiungiFrecceAlleTappe() {
 // AGGIUNTA INDIRIZZO (SINISTRA)
 // ==========================
 function aggiungiIndirizzo(testo) {
-  const lista = document.getElementById("addresses");
-  if (!lista) return;
+  const container = document.getElementById("list");
+
+  if (!container) return;
 
   // 🔴 QUESTA È LA RIGA CHE MANCAVA
   listaIndirizzi.push(testo);
