@@ -1,33 +1,11 @@
 console.log("Route Planner avviato");
-let listaIndirizzi = [];
+
+// ==========================
+// STATO
+// ==========================
 let pianificazioneAttiva = false;
 
-/*
-  Aggiunge frecce su/giù SOLO alle tappe (a destra)
-  VIENE CHIAMATA SOLO DOPO LA PIANIFICAZIONE
-*/
-function aggiungiFrecceAlleTappe() {
-  if (!pianificazioneAttiva) return;
-
-  const tappe = document.querySelectorAll("#right li, #right .tappa");
-
-  tappe.forEach((tappa) => {
-    if (tappa.querySelector(".frecce")) return;
-
-    const frecce = document.createElement("span");
-    frecce.className = "frecce";
-    frecce.style.marginLeft = "8px";
-    frecce.style.whiteSpace = "nowrap";
-
-    frecce.innerHTML = `
-      <button class="freccia su">⬆️</button>
-      <button class="freccia giu">⬇️</button>
-    `;
-
-    tappa.appendChild(frecce);
-  });
-}
-
+// ==========================
 // AGGIUNTA INDIRIZZO (SINISTRA)
 // ==========================
 function aggiungiIndirizzo(testo) {
@@ -38,12 +16,46 @@ function aggiungiIndirizzo(testo) {
   }
 
   const div = document.createElement("div");
-  div.textContent = testo;
+  div.className = "item";
+  div.innerHTML = `
+    <span class="num"></span>
+    <span class="text">${testo}</span>
+    <button class="del">🗑️</button>
+  `;
+
+  div.querySelector(".del").addEventListener("click", () => {
+    div.remove();
+    rinumera();
+  });
 
   list.appendChild(div);
-
-  console.log("✅ aggiunto:", testo);
+  rinumera();
 }
+
+// ==========================
+// RINUMERAZIONE
+// ==========================
+function rinumera() {
+  const items = document.querySelectorAll("#list .item");
+  items.forEach((item, index) => {
+    const num = item.querySelector(".num");
+    if (num) num.textContent = index + 1 + ".";
+  });
+}
+
+// ==========================
+// PULSANTE AGGIUNGI (TASTIERA)
+// ==========================
+const btnAdd = document.getElementById("btn-add");
+const inputAddress = document.getElementById("address");
+
+btnAdd.addEventListener("click", () => {
+  const testo = inputAddress.value.trim();
+  if (!testo) return;
+
+  aggiungiIndirizzo(testo);
+  inputAddress.value = "";
+});
 
 // ==========================
 // MICROFONO
@@ -52,9 +64,11 @@ const btnVoice = document.getElementById("btn-voice");
 let recognition = null;
 
 btnVoice.addEventListener("click", () => {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert("Microfono non supportato");
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Microfono non supportato dal browser");
     return;
   }
 
@@ -63,18 +77,40 @@ btnVoice.addEventListener("click", () => {
     recognition = null;
   }
 
-  recognition = new SR();
+  recognition = new SpeechRecognition();
   recognition.lang = "it-IT";
+  recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
+  recognition.onstart = () => {
+    console.log("🎤 Microfono attivo, parla ora...");
+  };
+
   recognition.onresult = (e) => {
-    const text = e.results[0][0].transcript;
+    const text = e.results[0][0].transcript.trim();
     console.log("🎤 SENTITO:", text);
+
+    // usa lo STESSO flusso della tastiera
+    inputAddress.value = text;
+    btnAdd.click();
+  };
+
+  recognition.onerror = (e) => {
+    console.error("❌ Errore microfono:", e.error);
+  };
+
+  recognition.onend = () => {
+    console.log("🎤 Microfono spento");
+    recognition = null;
   };
 
   recognition.start();
 });
+
+// ==========================
+// PIANIFICA
+// ==========================
 const btnPlan = document.getElementById("plan");
 
 btnPlan.addEventListener("click", () => {
