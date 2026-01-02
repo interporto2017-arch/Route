@@ -1,93 +1,41 @@
-* {
-  box-sizing: border-box;
-}
-
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  overflow-y: auto; /* ← QUI */
+  font-family: Arial, sans-serif;
 }
-
-/* contenitore generale */
-
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-}
-
-/* ================= TOP ================= */
-#top {
-  padding: 12px;
+header {
+  padding: 10px;
   border-bottom: 1px solid #ccc;
-  display: flex;
-  justify-content: center;
 }
-
-/* LOGO */
-#logoBox {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-#logo {
+input {
+  padding: 6px;
   width: 300px;
-  height: auto;
-  display: block;
 }
-
-/* SEARCH */
-#searchBar {
-  width: 300px; /* stessa larghezza del logo */
+.buttons button {
+  margin: 3px;
 }
-
-#search {
-  width: 100%;
-  padding: 8px;
+#counter {
+  margin-top: 6px;
+  font-weight: bold;
 }
-
-/* ================= LAYOUT ================= */
-#layout {
-  display: flex;
-  flex: 1;
-  width: 100%;
+main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - 140px);
 }
-
-/* pannello sinistro */
-#left {
-  width: 300px;
-  min-width: 300px;
-  max-width: 300px;
-  overflow-y: auto;
+aside {
+  padding: 10px;
   border-right: 1px solid #ccc;
+  overflow: auto;
 }
-
-/* mappa */
 #map {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  height: 100%;
 }
-
-/* pannello destro */
-#right {
-  width: 340px;
-  min-width: 340px;
-  max-width: 340px;
-  overflow-y: auto;
-  border-left: 1px solid #ccc;
-}
-.frecce button {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 2px;
-}
-
-.frecce button:hover {
-  transform: scale(1.2);
+.item {
+  background: #f4f4f5;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
 }

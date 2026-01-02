@@ -1,147 +1,161 @@
-console.log("Route Planner avviato");
+const MAX = 50;
+let map,
+  autocomplete,
+  directionsService,
+  directionsRenderer,
+  userMarker = null;
+let addresses = JSON.parse(localStorage.getItem("addresses") || "[]");
 
-// ==========================
-// STATO
-// ==========================
-let pianificazioneAttiva = false;
-let indirizzi = []; // UNICA fonte di verità
-const MAX_INDIRIZZI = 50;
+// ELEMENTI
+const input = document.getElementById("search");
+const list = document.getElementById("list");
+const counter = document.getElementById("counter");
 
-// ==========================
-// RENDER LISTA
-// ==========================
-function renderLista() {
-  const list = document.getElementById("list");
-  const info = document.getElementById("addresses");
-  if (!list) return;
-
-  list.innerHTML = "";
-
-  indirizzi.forEach((testo, i) => {
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span class="num">${i + 1}.</span>
-      <span class="text">${testo}</span>
-      <button class="del">🗑️</button>
-    `;
-
-    div.querySelector(".del").onclick = () => {
-      indirizzi.splice(i, 1);
-      renderLista();
-    };
-
-    list.appendChild(div);
+// MAPPA
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 45.46, lng: 9.19 },
+    zoom: 6,
   });
-
-  // contatore visivo
-  if (info) {
-    info.innerHTML = `
-      <b>Indirizzi:</b> ${indirizzi.length} / ${MAX_INDIRIZZI}
-      ${
-        indirizzi.length >= 45
-          ? "<span style='color:red'> ⚠️ quasi pieno</span>"
-          : ""
-      }
-    `;
-  }
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ map });
+  autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["formatted_address"],
+  });
+  autocomplete.addListener("place_changed", () => {
+    const p = autocomplete.getPlace();
+    if (p.formatted_address) {
+      addAddress(p.formatted_address);
+      input.value = "";
+    }
+  });
+  render();
 }
 
-// ==========================
-// AGGIUNTA SICURA (TASTIERA + VOCE)
-// ==========================
-function aggiungiIndirizzo(testo) {
-  if (!testo) return;
-
-  const pulito = testo.trim();
-  if (!pulito) return;
-
-  // limite massimo
-  if (indirizzi.length >= MAX_INDIRIZZI) {
-    alert("Hai raggiunto il limite massimo di 50 indirizzi");
-    return;
-  }
-
-  // no duplicati
-  if (indirizzi.some((v) => v.toLowerCase() === pulito.toLowerCase())) {
-    alert("Indirizzo già presente");
-    return;
-  }
-
-  indirizzi.push(pulito);
-  renderLista();
+// RENDER
+function render() {
+  list.innerHTML = "";
+  addresses.forEach((a, i) => {
+    const d = document.createElement("div");
+    d.className = "item";
+    d.innerHTML = `<span>${i + 1}. ${a}</span><button>🗑</button>`;
+    d.querySelector("button").onclick = () => {
+      addresses.splice(i, 1);
+      save();
+      render();
+    };
+    list.appendChild(d);
+  });
+  counter.textContent = `Indirizzi: ${addresses.length} / ${MAX}`;
 }
 
-// ==========================
-// INPUT + AGGIUNGI (TASTIERA)
-// ==========================
-const inputSearch = document.getElementById("search");
-const btnAdd = document.getElementById("add");
+// LOGICA
+function addAddress(v) {
+  if (!v) return;
+  v = v.trim();
+  if (!v || addresses.length >= MAX) return;
+  if (addresses.some((x) => x.toLowerCase() === v.toLowerCase())) return;
+  addresses.push(v);
+  save();
+  render();
+}
+function save() {
+  localStorage.setItem("addresses", JSON.stringify(addresses));
+}
 
-btnAdd.onclick = (event) => {
-  if (event) event.preventDefault();
-
-  aggiungiIndirizzo(inputSearch.value);
-  inputSearch.value = "";
+// BOTTONI
+document.getElementById("add").onclick = () => {
+  addAddress(input.value);
+  input.value = "";
+};
+document.getElementById("clear").onclick = () => {
+  addresses = [];
+  save();
+  directionsRenderer.set("directions", null);
+  render();
 };
 
-// ==========================
-// MICROFONO (STABILE)
-// ==========================
-const btnVoice = document.getElementById("btn-voice");
+// PIANIFICA
+document.getElementById("plan").onclick = () => {
+  if (addresses.length < 2) return alert("Minimo 2 indirizzi");
+  directionsService.route(
+    {
+      origin: addresses[0],
+      destination: addresses[addresses.length - 1],
+      waypoints: addresses
+        .slice(1, -1)
+        .map((a) => ({ location: a, stopover: true })),
+      optimizeWaypoints: true,
+      travelMode: "DRIVING",
+    },
+    (r, s) => {
+      if (s === "OK") directionsRenderer.setDirections(r);
+      else alert(s);
+    }
+  );
+};
+
+// GPS
+document.getElementById("gps").onclick = () => {
+  navigator.geolocation.getCurrentPosition(
+    (p) => {
+      const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+      if (userMarker) userMarker.setMap(null);
+      userMarker = new google.maps.Marker({ position: pos, map });
+      map.setCenter(pos);
+      map.setZoom(14);
+    },
+    () => alert("GPS negato")
+  );
+};
+
+// VOCE
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null;
-
-btnVoice.onclick = () => {
-  if (!SR) {
-    alert("Il tuo browser non supporta il riconoscimento vocale.");
-    return;
-  }
-
-  // se già attivo, fermalo
+document.getElementById("voice").onclick = () => {
+  if (!SR) return alert("Non supportato");
   if (rec) {
     rec.stop();
     rec = null;
   }
-
   rec = new SR();
   rec.lang = "it-IT";
-  rec.continuous = false;
-  rec.interimResults = false;
-
-  // feedback visivo
-  btnVoice.style.backgroundColor = "#ff4d4d";
-  btnVoice.style.color = "white";
-
-  rec.onresult = (e) => {
-    const testo = e.results[0][0].transcript;
-    console.log("Voce:", testo);
-    aggiungiIndirizzo(testo);
-    inputSearch.value = "";
-  };
-
-  rec.onend = () => {
-    btnVoice.style.backgroundColor = "";
-    btnVoice.style.color = "";
-    rec = null;
-    console.log("Microfono spento");
-  };
-
-  rec.onerror = (e) => {
-    console.error("Errore microfono:", e.error);
-    btnVoice.style.backgroundColor = "";
-    btnVoice.style.color = "";
-    rec = null;
-  };
-
+  rec.onresult = (e) => addAddress(e.results[0][0].transcript);
+  rec.onend = () => (rec = null);
   rec.start();
 };
 
-// ==========================
-// PIANIFICA (placeholder)
-// ==========================
-const btnPlan = document.getElementById("plan");
-btnPlan.onclick = () => {
-  pianificazioneAttiva = true;
-  console.log("Pianificazione attiva:", pianificazioneAttiva);
+// PDF
+document.getElementById("pdf").onclick = () => {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  addresses.forEach((a, i) => pdf.text(`${i + 1}. ${a}`, 10, 10 + i * 8));
+  pdf.save("itinerario.pdf");
+};
+
+// SALVA / PERCORSI
+function getRoutes() {
+  return JSON.parse(localStorage.getItem("routes") || "[]");
+}
+function setRoutes(r) {
+  localStorage.setItem("routes", JSON.stringify(r));
+}
+
+document.getElementById("save").onclick = () => {
+  const name = prompt("Nome percorso");
+  if (!name) return;
+  const r = getRoutes();
+  r.push({ name, addresses: [...addresses] });
+  setRoutes(r);
+};
+
+document.getElementById("routes").onclick = () => {
+  const r = getRoutes();
+  if (!r.length) return alert("Nessun percorso");
+  const n = prompt(r.map((x, i) => `${i + 1}) ${x.name}`).join("\n"));
+  const i = parseInt(n) - 1;
+  if (!r[i]) return;
+  addresses = [...r[i].addresses];
+  save();
+  render();
 };
