@@ -71,10 +71,9 @@ btnVoice.addEventListener("click", () => {
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
 
-    // 🔴 TEST SECCO
-    alert("VOCE: " + text);
-
-    aggiungiIndirizzo(text);
+    // usa lo STESSO flusso del tasto "Aggiungi"
+    document.getElementById("address").value = text;
+    document.getElementById("btn-add").click();
   };
 
   recognition.start();
