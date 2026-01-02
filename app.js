@@ -4,13 +4,15 @@ console.log("Route Planner avviato");
 // STATO
 // ==========================
 let pianificazioneAttiva = false;
-let indirizzi = []; // <-- UNICA fonte di verità
+let indirizzi = []; // UNICA fonte di verità
+const MAX_INDIRIZZI = 50;
 
 // ==========================
 // RENDER LISTA
 // ==========================
 function renderLista() {
   const list = document.getElementById("list");
+  const info = document.getElementById("addresses");
   if (!list) return;
 
   list.innerHTML = "";
@@ -31,17 +33,40 @@ function renderLista() {
 
     list.appendChild(div);
   });
+
+  // contatore visivo
+  if (info) {
+    info.innerHTML = `
+      <b>Indirizzi:</b> ${indirizzi.length} / ${MAX_INDIRIZZI}
+      ${
+        indirizzi.length >= 45
+          ? "<span style='color:red'> ⚠️ quasi pieno</span>"
+          : ""
+      }
+    `;
+  }
 }
 
 // ==========================
-// AGGIUNTA SICURA
+// AGGIUNTA SICURA (TASTIERA + VOCE)
 // ==========================
 function aggiungiIndirizzo(testo) {
+  if (!testo) return;
+
   const pulito = testo.trim();
   if (!pulito) return;
 
-  // ❌ no duplicati
-  if (indirizzi.some((v) => v.toLowerCase() === pulito.toLowerCase())) return;
+  // limite massimo
+  if (indirizzi.length >= MAX_INDIRIZZI) {
+    alert("Hai raggiunto il limite massimo di 50 indirizzi");
+    return;
+  }
+
+  // no duplicati
+  if (indirizzi.some((v) => v.toLowerCase() === pulito.toLowerCase())) {
+    alert("Indirizzo già presente");
+    return;
+  }
 
   indirizzi.push(pulito);
   renderLista();
@@ -54,7 +79,6 @@ const inputSearch = document.getElementById("search");
 const btnAdd = document.getElementById("add");
 
 btnAdd.onclick = (event) => {
-  // Impedisce SEMPRE il refresh della pagina se c'è un <form>
   if (event) event.preventDefault();
 
   aggiungiIndirizzo(inputSearch.value);
@@ -62,69 +86,62 @@ btnAdd.onclick = (event) => {
 };
 
 // ==========================
-// MICROFONO (Versione Finale)
+// MICROFONO (STABILE)
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
 
 btnVoice.onclick = () => {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     alert("Il tuo browser non supporta il riconoscimento vocale.");
     return;
   }
 
-  const rec = new SR();
+  // se già attivo, fermalo
+  if (rec) {
+    rec.stop();
+    rec = null;
+  }
+
+  rec = new SR();
   rec.lang = "it-IT";
   rec.continuous = false;
   rec.interimResults = false;
-  rec.maxAlternatives = 1;
 
-  // Feedback Visivo: Inizia l'ascolto
-  btnVoice.style.backgroundColor = "#ff4d4d"; // Rosso acceso
+  // feedback visivo
+  btnVoice.style.backgroundColor = "#ff4d4d";
   btnVoice.style.color = "white";
-  console.log("Microfono avviato, in ascolto...");
 
   rec.onresult = (e) => {
-    // Logica corretta per ottenere il risultato finale
-    const res = e.results[e.results.length - 1];
-    if (!res.isFinal) return;
-
-    const trascrizione = res.transcript;
-    aggiungiIndirizzo(trascrizione);
-    console.log("Trascrizione:", trascrizione);
-
-    // Pulisce l'input di testo per evitare confusione
+    const testo = e.results[0][0].transcript;
+    console.log("Voce:", testo);
+    aggiungiIndirizzo(testo);
     inputSearch.value = "";
   };
 
   rec.onend = () => {
-    // Feedback Visivo: Finisce l'ascolto
-    btnVoice.style.backgroundColor = ""; // Torna al colore originale
+    btnVoice.style.backgroundColor = "";
     btnVoice.style.color = "";
-    console.log("Microfono spento.");
+    rec = null;
+    console.log("Microfono spento");
   };
 
   rec.onerror = (e) => {
-    console.error("Errore riconoscimento vocale:", e.error);
-    alert("Errore microfono: " + e.error);
-    // Assicurati che l'indicatore visivo si spenga anche in caso di errore
+    console.error("Errore microfono:", e.error);
     btnVoice.style.backgroundColor = "";
     btnVoice.style.color = "";
+    rec = null;
   };
 
-  try {
-    rec.start();
-  } catch (err) {
-    console.warn("Riconoscimento già in corso o altro errore di avvio.");
-  }
+  rec.start();
 };
 
 // ==========================
-// PIANIFICA
+// PIANIFICA (placeholder)
 // ==========================
 const btnPlan = document.getElementById("plan");
 btnPlan.onclick = () => {
   pianificazioneAttiva = true;
   console.log("Pianificazione attiva:", pianificazioneAttiva);
-  alert("Pianificazione avviata!"); // Aggiungo un alert temporaneo per conferma visiva
 };
