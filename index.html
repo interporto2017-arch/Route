@@ -680,6 +680,20 @@
           );
         };
       });
+      function safeAddAddress(value) {
+        if (!value) return;
+
+        const v = value.trim();
+        if (!v) return;
+
+        if (addresses.length >= 50) {
+          alert("Limite massimo di 50 indirizzi raggiunto");
+          return;
+        }
+
+        addresses.push(v);
+        renderList();
+      }
     </script>
 
     <script
