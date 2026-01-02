@@ -31,22 +31,18 @@ function aggiungiFrecceAlleTappe() {
 // AGGIUNTA INDIRIZZO (SINISTRA)
 // ==========================
 function aggiungiIndirizzo(testo) {
-  const container = document.getElementById("list");
-  if (!container) return;
+  const list = document.getElementById("list");
+  if (!list) {
+    console.error("❌ #list non trovato");
+    return;
+  }
 
   const div = document.createElement("div");
-  div.className = "item";
-  div.innerHTML = `
-    <span class="num"></span>
-    <span class="text">${testo}</span>
-    <button class="del">🗑️</button>
-  `;
+  div.textContent = testo;
 
-  div.querySelector(".del").addEventListener("click", () => {
-    div.remove();
-  });
+  list.appendChild(div);
 
-  container.appendChild(div);
+  console.log("✅ aggiunto:", testo);
 }
 
 // ==========================
