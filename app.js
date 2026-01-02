@@ -91,9 +91,7 @@ btnVoice.addEventListener("click", () => {
     const text = e.results[0][0].transcript.trim();
     console.log("🎤 SENTITO:", text);
 
-    // usa lo STESSO flusso della tastiera
-    inputAddress.value = text;
-    btnAdd.click();
+    aggiungiIndirizzo(text);
   };
 
   recognition.onerror = (e) => {
