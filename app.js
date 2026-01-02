@@ -44,26 +44,23 @@ function rinumera() {
 }
 
 // ==========================
-// PULSANTE AGGIUNGI (TASTIERA)
+// INPUT + AGGIUNGI (TASTIERA)
 // ==========================
-const btnAdd = document.getElementById("btn-add");
-const inputAddress = document.getElementById("address");
+const inputSearch = document.getElementById("search");
+const btnAdd = document.getElementById("add");
 
 btnAdd.addEventListener("click", () => {
-  const testo = inputAddress.value.trim();
+  const testo = inputSearch.value.trim();
   if (!testo) return;
 
   aggiungiIndirizzo(testo);
-  inputAddress.value = "";
+  inputSearch.value = "";
 });
 
 // ==========================
-// MICROFONO (ALLINEATO AI TUOI ID)
+// MICROFONO
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
-const btnAdd = document.getElementById("add");
-const inputSearch = document.getElementById("search");
-
 let recognition = null;
 
 btnVoice.addEventListener("click", () => {
