@@ -76,6 +76,7 @@ btnVoice.addEventListener("click", () => {
   if (!SR) return;
 
   recognition = new SR();
+
   recognition.lang = "it-IT";
   recognition.continuous = false;
   recognition.interimResults = false;
