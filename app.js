@@ -1,11 +1,3 @@
-if (window.__APP_INIT__) {
-  console.warn("app.js già inizializzato, esco");
-  return;
-}
-window.__APP_INIT__ = true;
-
-console.log("Route Planner avviato");
-
 console.log("Route Planner avviato");
 
 // ==========================
@@ -18,10 +10,7 @@ let pianificazioneAttiva = false;
 // ==========================
 function aggiungiIndirizzo(testo) {
   const list = document.getElementById("list");
-  if (!list) {
-    console.error("❌ #list non trovato");
-    return;
-  }
+  if (!list) return;
 
   const div = document.createElement("div");
   div.className = "item";
@@ -31,10 +20,10 @@ function aggiungiIndirizzo(testo) {
     <button class="del">🗑️</button>
   `;
 
-  div.querySelector(".del").addEventListener("click", () => {
+  div.querySelector(".del").onclick = () => {
     div.remove();
     rinumera();
-  });
+  };
 
   list.appendChild(div);
   rinumera();
@@ -44,10 +33,8 @@ function aggiungiIndirizzo(testo) {
 // RINUMERAZIONE
 // ==========================
 function rinumera() {
-  const items = document.querySelectorAll("#list .item");
-  items.forEach((item, index) => {
-    const num = item.querySelector(".num");
-    if (num) num.textContent = index + 1 + ".";
+  document.querySelectorAll("#list .item").forEach((item, i) => {
+    item.querySelector(".num").textContent = i + 1 + ".";
   });
 }
 
@@ -57,51 +44,53 @@ function rinumera() {
 const inputSearch = document.getElementById("search");
 const btnAdd = document.getElementById("add");
 
-btnAdd.addEventListener("click", () => {
+btnAdd.onclick = () => {
   const testo = inputSearch.value.trim();
   if (!testo) return;
 
   aggiungiIndirizzo(testo);
   inputSearch.value = "";
-});
+};
 
 // ==========================
-// MICROFONO
+// MICROFONO (MINIMO, STABILE)
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
-let recognition = null;
 
-btnVoice.addEventListener("click", () => {
+btnVoice.onclick = () => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
+  if (!SR) {
+    alert("SpeechRecognition non supportato");
+    return;
+  }
 
-  recognition = new SR();
+  const rec = new SR();
+  rec.lang = "it-IT";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
 
-  recognition.lang = "it-IT";
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onresult = (e) => {
-    const res = e.results[e.results.length - 1];
-    if (!res.isFinal) return;
-
-    const text = res[0].transcript.trim();
-    if (text.length < 4) return;
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript.trim();
+    if (text.length < 2) return;
 
     inputSearch.value = text;
     btnAdd.click();
   };
 
-  recognition.start();
-});
+  rec.onerror = (e) => {
+    console.error("ERRORE MIC:", e.error);
+  };
+
+  rec.start();
+};
 
 // ==========================
 // PIANIFICA
 // ==========================
 const btnPlan = document.getElementById("plan");
 
-btnPlan.addEventListener("click", () => {
-  console.log("🧭 Pianifica cliccato");
+btnPlan.onclick = () => {
   pianificazioneAttiva = true;
-});
+  console.log("🧭 Pianifica cliccato");
+};
