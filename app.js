@@ -85,7 +85,7 @@ btnVoice.onclick = () => {
 
     aggiungiIndirizzo(res[0].transcript);
   };
-
+  inputSearch.value = "";
   rec.start();
 };
 
