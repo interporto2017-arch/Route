@@ -71,9 +71,12 @@ btnVoice.addEventListener("click", () => {
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
 
-    // usa lo STESSO flusso del tasto "Aggiungi"
-    document.getElementById("address").value = text;
-    document.getElementById("btn-add").click();
+    // scrive nel campo di input
+    document.querySelector('input[placeholder="Cerca indirizzo..."]').value =
+      text;
+
+    // simula il click su "Aggiungi"
+    document.querySelector("button").click();
   };
 
   recognition.start();
