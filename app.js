@@ -105,37 +105,3 @@ btnPlan.addEventListener("click", () => {
   console.log("🧭 Pianifica cliccato");
   pianificazioneAttiva = true;
 });
-// ==========================
-// TEST MICROFONO MINIMO
-// ==========================
-const testBtn = document.getElementById("btn-voice");
-
-testBtn.addEventListener("click", () => {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    alert("SpeechRecognition non supportato");
-    return;
-  }
-
-  const rec = new SR();
-  rec.lang = "it-IT";
-  rec.continuous = false;
-  rec.interimResults = false;
-
-  rec.onstart = () => {
-    console.log("🎤 MIC ATTIVO");
-  };
-
-  rec.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    console.log("✅ SENTITO:", text);
-    alert("SENTITO: " + text);
-  };
-
-  rec.onerror = (e) => {
-    console.error("❌ ERRORE MIC:", e.error);
-    alert("ERRORE MIC: " + e.error);
-  };
-
-  rec.start();
-});
