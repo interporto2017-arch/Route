@@ -1,3 +1,11 @@
+if (window.__APP_INIT__) {
+  console.warn("app.js già inizializzato, esco");
+  return;
+}
+window.__APP_INIT__ = true;
+
+console.log("Route Planner avviato");
+
 console.log("Route Planner avviato");
 
 // ==========================
