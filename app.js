@@ -58,49 +58,26 @@ btnAdd.addEventListener("click", () => {
 });
 
 // ==========================
-// MICROFONO
+// MICROFONO (ALLINEATO AI TUOI ID)
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
+const btnAdd = document.getElementById("add");
+const inputSearch = document.getElementById("search");
+
 let recognition = null;
 
 btnVoice.addEventListener("click", () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
 
-  if (!SpeechRecognition) {
-    alert("Microfono non supportato dal browser");
-    return;
-  }
-
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
-  }
-
-  recognition = new SpeechRecognition();
+  recognition = new SR();
   recognition.lang = "it-IT";
-  recognition.continuous = false;
   recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onstart = () => {
-    console.log("🎤 Microfono attivo, parla ora...");
-  };
 
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript.trim();
-    console.log("🎤 SENTITO:", text);
-
-    aggiungiIndirizzo(text);
-  };
-
-  recognition.onerror = (e) => {
-    console.error("❌ Errore microfono:", e.error);
-  };
-
-  recognition.onend = () => {
-    console.log("🎤 Microfono spento");
-    recognition = null;
+    inputSearch.value = text;
+    btnAdd.click();
   };
 
   recognition.start();
