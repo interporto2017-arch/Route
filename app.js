@@ -12,11 +12,20 @@ function aggiungiIndirizzo(testo) {
   const list = document.getElementById("list");
   if (!list) return;
 
+  const pulito = testo.trim();
+  if (!pulito) return;
+
+  // ❌ evita duplicati
+  const esiste = [...list.querySelectorAll(".text")].some(
+    (el) => el.textContent.toLowerCase() === pulito.toLowerCase()
+  );
+  if (esiste) return;
+
   const div = document.createElement("div");
   div.className = "item";
   div.innerHTML = `
     <span class="num"></span>
-    <span class="text">${testo}</span>
+    <span class="text">${pulito}</span>
     <button class="del">🗑️</button>
   `;
 
@@ -45,15 +54,12 @@ const inputSearch = document.getElementById("search");
 const btnAdd = document.getElementById("add");
 
 btnAdd.onclick = () => {
-  const testo = inputSearch.value.trim();
-  if (!testo) return;
-
-  aggiungiIndirizzo(testo);
+  aggiungiIndirizzo(inputSearch.value);
   inputSearch.value = "";
 };
 
 // ==========================
-// MICROFONO (MINIMO, STABILE)
+// MICROFONO (CORRETTO)
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
 
@@ -71,11 +77,13 @@ btnVoice.onclick = () => {
   rec.maxAlternatives = 1;
 
   rec.onresult = (e) => {
-    const text = e.results[0][0].transcript.trim();
+    const res = e.results[e.results.length - 1];
+    if (!res.isFinal) return;
+
+    const text = res[0].transcript.trim();
     if (text.length < 2) return;
 
-    inputSearch.value = text;
-    btnAdd.click();
+    aggiungiIndirizzo(text); // ✅ UNA SOLA VOLTA
   };
 
   rec.onerror = (e) => {
