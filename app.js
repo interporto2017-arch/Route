@@ -62,31 +62,59 @@ btnAdd.onclick = (event) => {
 };
 
 // ==========================
-// MICROFONO
+// MICROFONO (Versione 3.0: Feedback visivo e robustezza)
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
 
 btnVoice.onclick = () => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert("SpeechRecognition non supportato");
+    alert("Il tuo browser non supporta il riconoscimento vocale.");
     return;
   }
 
   const rec = new SR();
   rec.lang = "it-IT";
-  rec.continuous = false;
+  rec.continuous = false; // Vogliamo un solo indirizzo per volta
   rec.interimResults = false;
   rec.maxAlternatives = 1;
 
-  rec.onresult = (e) => {
-    const res = e.results[e.results.length - 1];
-    if (!res.isFinal) return;
+  // 1. Feedback Visivo: Inizia l'ascolto
+  btnVoice.style.backgroundColor = "#ff4d4d"; // Rosso acceso
+  btnVoice.style.color = "white";
+  console.log("Microfono avviato, in ascolto...");
 
-    aggiungiIndirizzo(res[0].transcript);
+  rec.onresult = (e) => {
+    // Quando riceve un risultato valido
+    const trascrizione = e.results[0][0].transcript;
+    aggiungiIndirizzo(trascrizione);
+    console.log("Trascrizione:", trascrizione);
+
+    // Pulisce l'input di testo per evitare confusione
+    inputSearch.value = "";
   };
-  inputSearch.value = "";
-  rec.start();
+
+  rec.onend = () => {
+    // 2. Feedback Visivo: Finisce l'ascolto (automaticamente o per errore)
+    btnVoice.style.backgroundColor = ""; // Torna al colore originale
+    btnVoice.style.color = "";
+    console.log("Microfono spento.");
+  };
+
+  rec.onerror = (e) => {
+    // Gestione errori specifici del browser
+    console.error("Errore riconoscimento vocale:", e.error);
+    alert("Errore microfono: " + e.error);
+  };
+
+  try {
+    rec.start();
+  } catch (err) {
+    // Se l'utente clicca di nuovo mentre è già attivo
+    console.warn("Riconoscimento già in corso, riavvio forzato.");
+    rec.stop(); // Ferma il precedente e riprova
+    rec.start();
+  }
 };
 
 // ==========================
