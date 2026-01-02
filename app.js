@@ -77,10 +77,17 @@ btnVoice.addEventListener("click", () => {
 
   recognition = new SR();
   recognition.lang = "it-IT";
+  recognition.continuous = false;
   recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
   recognition.onresult = (e) => {
-    const text = e.results[0][0].transcript.trim();
+    const res = e.results[e.results.length - 1];
+    if (!res.isFinal) return;
+
+    const text = res[0].transcript.trim();
+    if (text.length < 4) return;
+
     inputSearch.value = text;
     btnAdd.click();
   };
