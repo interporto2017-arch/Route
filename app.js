@@ -4,47 +4,47 @@ console.log("Route Planner avviato");
 // STATO
 // ==========================
 let pianificazioneAttiva = false;
+let indirizzi = []; // <-- UNICA fonte di verità
 
 // ==========================
-// AGGIUNTA INDIRIZZO (SINISTRA)
+// RENDER LISTA
 // ==========================
-function aggiungiIndirizzo(testo) {
+function renderLista() {
   const list = document.getElementById("list");
   if (!list) return;
 
-  const pulito = testo.trim();
-  if (!pulito) return;
+  list.innerHTML = "";
 
-  // ❌ evita duplicati
-  const esiste = [...list.querySelectorAll(".text")].some(
-    (el) => el.textContent.toLowerCase() === pulito.toLowerCase()
-  );
-  if (esiste) return;
+  indirizzi.forEach((testo, i) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span class="num">${i + 1}.</span>
+      <span class="text">${testo}</span>
+      <button class="del">🗑️</button>
+    `;
 
-  const div = document.createElement("div");
-  div.className = "item";
-  div.innerHTML = `
-    <span class="num"></span>
-    <span class="text">${pulito}</span>
-    <button class="del">🗑️</button>
-  `;
+    div.querySelector(".del").onclick = () => {
+      indirizzi.splice(i, 1);
+      renderLista();
+    };
 
-  div.querySelector(".del").onclick = () => {
-    div.remove();
-    rinumera();
-  };
-
-  list.appendChild(div);
-  rinumera();
+    list.appendChild(div);
+  });
 }
 
 // ==========================
-// RINUMERAZIONE
+// AGGIUNTA SICURA
 // ==========================
-function rinumera() {
-  document.querySelectorAll("#list .item").forEach((item, i) => {
-    item.querySelector(".num").textContent = i + 1 + ".";
-  });
+function aggiungiIndirizzo(testo) {
+  const pulito = testo.trim();
+  if (!pulito) return;
+
+  // ❌ no duplicati
+  if (indirizzi.some((v) => v.toLowerCase() === pulito.toLowerCase())) return;
+
+  indirizzi.push(pulito);
+  renderLista();
 }
 
 // ==========================
@@ -59,7 +59,7 @@ btnAdd.onclick = () => {
 };
 
 // ==========================
-// MICROFONO (CORRETTO)
+// MICROFONO
 // ==========================
 const btnVoice = document.getElementById("btn-voice");
 
@@ -80,14 +80,7 @@ btnVoice.onclick = () => {
     const res = e.results[e.results.length - 1];
     if (!res.isFinal) return;
 
-    const text = res[0].transcript.trim();
-    if (text.length < 2) return;
-
-    aggiungiIndirizzo(text); // ✅ UNA SOLA VOLTA
-  };
-
-  rec.onerror = (e) => {
-    console.error("ERRORE MIC:", e.error);
+    aggiungiIndirizzo(res[0].transcript);
   };
 
   rec.start();
@@ -97,8 +90,6 @@ btnVoice.onclick = () => {
 // PIANIFICA
 // ==========================
 const btnPlan = document.getElementById("plan");
-
 btnPlan.onclick = () => {
   pianificazioneAttiva = true;
-  console.log("🧭 Pianifica cliccato");
 };
