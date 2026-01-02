@@ -70,13 +70,7 @@ btnVoice.addEventListener("click", () => {
 
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
-
-    // scrive nel campo di input
-    document.querySelector('input[placeholder="Cerca indirizzo..."]').value =
-      text;
-
-    // simula il click su "Aggiungi"
-    document.querySelector("button").click();
+    console.log("🎤 SENTITO:", text);
   };
 
   recognition.start();
