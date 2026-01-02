@@ -70,7 +70,10 @@ btnVoice.addEventListener("click", () => {
 
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
-    console.log("🎤 VOCE:", text);
+
+    // 🔴 TEST SECCO
+    alert("VOCE: " + text);
+
     aggiungiIndirizzo(text);
   };
 
