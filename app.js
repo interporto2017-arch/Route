@@ -53,7 +53,10 @@ function aggiungiIndirizzo(testo) {
 const inputSearch = document.getElementById("search");
 const btnAdd = document.getElementById("add");
 
-btnAdd.onclick = () => {
+btnAdd.onclick = (event) => {
+  // Questo comando impedisce alla pagina di ricaricarsi
+  if (event) event.preventDefault();
+
   aggiungiIndirizzo(inputSearch.value);
   inputSearch.value = "";
 };
