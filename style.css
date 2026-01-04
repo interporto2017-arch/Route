@@ -1,36 +1,59 @@
+:root {
+  --right: 370px; /* ← CAMBIA SOLO QUESTO NUMERO */
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
 }
+
 header {
   padding: 10px;
   border-bottom: 1px solid #ccc;
 }
+
 input {
   padding: 6px;
   width: 300px;
 }
+
 .buttons button {
   margin: 3px;
 }
+
 #counter {
   margin-top: 6px;
   font-weight: bold;
 }
+
+/* LAYOUT PRINCIPALE */
 main {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: var(--right) 1fr var(--right);
   height: calc(100vh - 140px);
 }
-aside {
+
+/* PANNELLO SINISTRO */
+main > aside:first-child {
   padding: 10px;
-  border-right: 1px solid #ccc;
   overflow: auto;
+  border-right: 1px solid #ccc;
 }
+
+/* MAPPA */
 #map {
   width: 100%;
   height: 100%;
 }
+
+/* PANNELLO DESTRO */
+#right-panel {
+  padding: 10px;
+  overflow-y: auto;
+  border-left: 1px solid #ccc;
+}
+
+/* ITEM LISTA */
 .item {
   background: #f4f4f5;
   padding: 8px;
@@ -38,4 +61,11 @@ aside {
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
+}
+.arrow {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  font-size: 16px;
 }
